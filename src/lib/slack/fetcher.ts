@@ -77,31 +77,77 @@ async function getAuthUserId(
   return userId;
 }
 
-// Resolve <@USERID> mentions in message text to display names
+// Cache user groups per workspace (rarely changes)
+const usergroupCache = new Map<string, { groups: Map<string, string>; expiresAt: number }>();
+const USERGROUP_CACHE_TTL = 60 * 60 * 1000; // 1 hour
+
+async function resolveUsergroupHandle(
+  client: WebClient,
+  workspaceId: string,
+  subteamId: string
+): Promise<string> {
+  let entry = usergroupCache.get(workspaceId);
+  if (!entry || Date.now() > entry.expiresAt) {
+    const groups = new Map<string, string>();
+    try {
+      const result = await client.usergroups.list();
+      for (const ug of result.usergroups ?? []) {
+        if (ug.id && ug.handle) groups.set(ug.id, ug.handle);
+      }
+    } catch {
+      // May lack scope — return raw ID as fallback
+    }
+    entry = { groups, expiresAt: Date.now() + USERGROUP_CACHE_TTL };
+    usergroupCache.set(workspaceId, entry);
+  }
+  return entry.groups.get(subteamId) ?? subteamId;
+}
+
+// Resolve <@USERID> and <!subteam^ID> mentions in message text.
+// Self-mentions use «@!Name» marker, others use «@Name» marker
+// so the client can style them differently (gold vs blue).
+// Subteam mentions are styled gold (broadcast-like).
 async function resolveMentions(
   client: WebClient,
   workspaceId: string,
   text: string
 ): Promise<string> {
-  const mentionPattern = /<@([A-Z0-9]+)>/g;
-  const matches = [...text.matchAll(mentionPattern)];
-  if (matches.length === 0) return text;
-
-  // Collect unique user IDs
-  const userIds = [...new Set(matches.map((m) => m[1]))];
-
-  // Resolve all in parallel
-  const resolved = await Promise.all(
-    userIds.map(async (uid) => {
-      const { displayName } = await resolveUser(client, workspaceId, uid);
-      return { uid, displayName };
-    })
-  );
-
   let result = text;
-  for (const { uid, displayName } of resolved) {
-    result = result.replaceAll(`<@${uid}>`, `@${displayName}`);
+
+  // Resolve user mentions
+  const mentionPattern = /<@([A-Z0-9]+)>/g;
+  const userMatches = [...text.matchAll(mentionPattern)];
+  if (userMatches.length > 0) {
+    const myUserId = await getAuthUserId(client, workspaceId);
+    const userIds = [...new Set(userMatches.map((m) => m[1]))];
+    const resolved = await Promise.all(
+      userIds.map(async (uid) => {
+        const { displayName } = await resolveUser(client, workspaceId, uid);
+        return { uid, displayName, isSelf: uid === myUserId };
+      })
+    );
+    for (const { uid, displayName, isSelf } of resolved) {
+      const marker = isSelf ? `«@!${displayName}»` : `«@${displayName}»`;
+      result = result.replaceAll(`<@${uid}>`, marker);
+    }
   }
+
+  // Resolve subteam (user group) mentions: <!subteam^S07D13N011Q>
+  const subteamPattern = /<!subteam\^([A-Z0-9]+)>/g;
+  const subteamMatches = [...result.matchAll(subteamPattern)];
+  if (subteamMatches.length > 0) {
+    const subteamIds = [...new Set(subteamMatches.map((m) => m[1]))];
+    const resolved = await Promise.all(
+      subteamIds.map(async (id) => {
+        const handle = await resolveUsergroupHandle(client, workspaceId, id);
+        return { id, handle };
+      })
+    );
+    for (const { id, handle } of resolved) {
+      result = result.replaceAll(`<!subteam^${id}>`, `«@!${handle}»`);
+    }
+  }
+
   return result;
 }
 
@@ -116,13 +162,14 @@ function classifyChannelType(
 
 async function fetchUnreadsForWorkspace(
   config: WorkspaceConfig
-): Promise<{ messages: UnreadMessage[]; summary: WorkspaceSummary }> {
+): Promise<{ messages: UnreadMessage[]; summary: WorkspaceSummary; myName: string }> {
   const client = getClientForConfig(config);
   const messages: UnreadMessage[] = [];
 
   if (isRateLimited(config.id)) {
     return {
       messages: [],
+      myName: "",
       summary: {
         id: config.id,
         teamId: config.teamId,
@@ -137,6 +184,7 @@ async function fetchUnreadsForWorkspace(
   }
 
   const myUserId = await getAuthUserId(client, config.id);
+  const { displayName: myName } = await resolveUser(client, config.id, myUserId);
 
   // Step 1: Get conversations (capped to avoid rate limits on large workspaces)
   let allConversations: Record<string, unknown>[] = [];
@@ -271,6 +319,7 @@ async function fetchUnreadsForWorkspace(
 
   return {
     messages,
+    myName,
     summary: {
       id: config.id,
       teamId: config.teamId,
@@ -297,6 +346,7 @@ export async function fetchAllUnreads(
 
   const allMessages: UnreadMessage[] = [];
   const workspaces: WorkspaceSummary[] = [];
+  const myNameSet = new Set<string>();
 
   for (let i = 0; i < results.length; i++) {
     const result = results[i];
@@ -305,6 +355,7 @@ export async function fetchAllUnreads(
     if (result.status === "fulfilled") {
       allMessages.push(...result.value.messages);
       workspaces.push(result.value.summary);
+      if (result.value.myName) myNameSet.add(result.value.myName);
     } else {
       console.error(`Failed to fetch workspace ${config.id}:`, result.reason);
       workspaces.push({
@@ -327,5 +378,6 @@ export async function fetchAllUnreads(
     workspaces,
     totalUnread: allMessages.length,
     fetchedAt: Date.now(),
+    myNames: [...myNameSet],
   };
 }

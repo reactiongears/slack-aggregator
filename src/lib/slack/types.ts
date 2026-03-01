@@ -44,6 +44,7 @@ export interface FeedResponse {
   workspaces: WorkspaceSummary[];
   totalUnread: number;
   fetchedAt: number;
+  myNames: string[]; // authenticated user's display names across workspaces
 }
 
 export interface ChannelInfo {

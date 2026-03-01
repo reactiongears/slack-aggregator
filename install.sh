@@ -33,6 +33,6 @@ echo -e "  ${dim}Installing dependencies...${reset}"
 npm install --silent
 echo -e "  ${green}✓${reset} Dependencies installed"
 
-# Run setup wizard
+# Create terminal shortcut
 echo ""
 node scripts/setup.mjs

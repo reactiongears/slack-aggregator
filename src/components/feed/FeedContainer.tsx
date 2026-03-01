@@ -265,6 +265,31 @@ export function FeedContainer() {
                 Try again
               </button>
             </div>
+          ) : feed && feed.workspaces.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center px-6">
+              <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center mb-6">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-indigo-400">
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-semibold text-gray-200 mb-2">
+                Welcome to Slack Aggregator
+              </h2>
+              <p className="text-sm text-gray-500 max-w-sm mb-6">
+                See all your unread Slack messages from every workspace in one place.
+                Add your first workspace to get started.
+              </p>
+              <button
+                onClick={() => setShowAddWorkspace(true)}
+                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Add Workspace
+              </button>
+            </div>
           ) : filteredMessages.length === 0 ? (
             <EmptyState />
           ) : (
@@ -280,6 +305,7 @@ export function FeedContainer() {
                   <FeedItem
                     key={message.id}
                     message={message}
+                    myNames={feed?.myNames ?? []}
                     onContextMenu={handleContextMenu}
                   />
                 ))}
