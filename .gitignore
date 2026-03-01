@@ -33,6 +33,12 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# local data (cache, ignores, user preferences)
+data/
+
+# debug scripts
+debug-*.js
+
 # vercel
 .vercel
 
