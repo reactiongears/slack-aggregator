@@ -7,6 +7,7 @@ interface WorkspaceListProps {
   selectedWorkspace?: string;
   onSelect: (id: string | undefined) => void;
   onAddWorkspace: () => void;
+  onReauth?: () => void;
 }
 
 export function WorkspaceList({
@@ -14,6 +15,7 @@ export function WorkspaceList({
   selectedWorkspace,
   onSelect,
   onAddWorkspace,
+  onReauth,
 }: WorkspaceListProps) {
   const totalUnread = workspaces.reduce((sum, w) => sum + w.unreadCount, 0);
 
@@ -58,6 +60,7 @@ export function WorkspaceList({
               selectedWorkspace === workspace.id ? undefined : workspace.id
             )
           }
+          onReauth={onReauth}
         />
       ))}
 

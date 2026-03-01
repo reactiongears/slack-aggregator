@@ -23,6 +23,7 @@ export function AddWorkspaceModal({ onClose, onAdded }: Props) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [error, setError] = useState("");
   const [addedNames, setAddedNames] = useState<string[]>([]);
+  const [refreshedNames, setRefreshedNames] = useState<string[]>([]);
 
   const startLogin = useCallback(async () => {
     setStep("waiting");
@@ -85,6 +86,7 @@ export function AddWorkspaceModal({ onClose, onAdded }: Props) {
       const data = await res.json();
       if (data.ok) {
         setAddedNames(data.added);
+        setRefreshedNames(data.refreshed ?? []);
         setStep("done");
         onAdded();
       } else {
@@ -204,6 +206,11 @@ export function AddWorkspaceModal({ onClose, onAdded }: Props) {
                 <p className="text-xs text-gray-500 mt-1">
                   {addedNames.join(", ")}
                 </p>
+                {refreshedNames.length > 0 && (
+                  <p className="text-xs text-green-400 mt-2">
+                    Auto-refreshed {refreshedNames.length} other workspace{refreshedNames.length !== 1 ? "s" : ""}: {refreshedNames.join(", ")}
+                  </p>
+                )}
               </div>
               <button
                 onClick={onClose}

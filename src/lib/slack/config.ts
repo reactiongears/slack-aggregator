@@ -11,7 +11,7 @@ const WORKSPACE_COLORS: Record<string, string> = {
 export function loadWorkspaceConfigs(): WorkspaceConfig[] {
   const workspaceIds = (process.env.SLACK_WORKSPACES ?? "").split(",").filter(Boolean);
 
-  // The d cookie is shared across all workspaces (single Slack browser session)
+  // Legacy global cookie — new installs use per-workspace cookies only
   const globalCookie = process.env.SLACK_COOKIE_D ?? "";
 
   return workspaceIds.map((id) => {

@@ -30,6 +30,7 @@ export function FeedContainer() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddWorkspace, setShowAddWorkspace] = useState(false);
   const [showIgnoreList, setShowIgnoreList] = useState(false);
+  const [tryingCookies, setTryingCookies] = useState(false);
 
   // Ignore list
   const [ignores, setIgnores] = useState<IgnoreEntry[]>([]);
@@ -200,6 +201,7 @@ export function FeedContainer() {
           selectedWorkspace={selectedWorkspace}
           onSelect={setSelectedWorkspace}
           onAddWorkspace={() => setShowAddWorkspace(true)}
+          onReauth={() => setShowAddWorkspace(true)}
         />
         <div className="p-3 border-t border-gray-800 space-y-1">
           <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">
@@ -263,6 +265,63 @@ export function FeedContainer() {
                 className="mt-4 px-4 py-2 bg-gray-800 rounded-lg text-sm hover:bg-gray-700 transition-colors"
               >
                 Try again
+              </button>
+            </div>
+          ) : feed && feed.workspaces.length > 0 && feed.workspaces.every((w) => w.error?.includes("invalid_auth")) ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center px-6">
+              <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mb-6">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-red-400">
+                  <path d="M12 9v4M12 17h.01" />
+                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-semibold text-gray-200 mb-2">
+                Session Expired
+              </h2>
+              <p className="text-sm text-gray-500 max-w-sm mb-6">
+                Your Slack session tokens have expired. Click below to reconnect — we'll try existing cookies first.
+              </p>
+              <button
+                disabled={tryingCookies}
+                onClick={async () => {
+                  setTryingCookies(true);
+                  // Try each failing workspace against other cookies
+                  const failing = feed!.workspaces.filter((w) => w.error?.includes("invalid_auth"));
+                  let anyFixed = false;
+                  for (const ws of failing) {
+                    try {
+                      const res = await fetch("/api/auth/try-refresh", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ workspaceId: ws.id }),
+                      });
+                      const data = await res.json();
+                      if (data.ok) anyFixed = true;
+                    } catch {}
+                  }
+                  setTryingCookies(false);
+                  if (!anyFixed) {
+                    setShowAddWorkspace(true);
+                  }
+                  // If any were fixed, feed will auto-refresh via SWR
+                }}
+                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+              >
+                {tryingCookies ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Trying cookies...
+                  </>
+                ) : (
+                  <>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4" />
+                      <polyline points="10 17 15 12 10 7" />
+                      <line x1="15" y1="12" x2="3" y2="12" />
+                    </svg>
+                    Reconnect
+                  </>
+                )}
               </button>
             </div>
           ) : feed && feed.workspaces.length === 0 ? (
