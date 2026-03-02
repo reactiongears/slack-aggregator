@@ -34,7 +34,7 @@ function cyan(text) {
 async function main() {
   console.log(bold("\n  Create a terminal shortcut\n"));
   console.log(
-    "  This adds a command so you can launch Slack Aggregator from any terminal.\n"
+    "  This adds a command to launch Slack Aggregator as a standalone app.\n"
   );
 
   const aliasName = (
@@ -58,24 +58,13 @@ async function main() {
     rcFile = path.join(os.homedir(), ".profile");
   }
 
+  const launchScript = path.join(PROJECT_DIR, "scripts", "launch.sh");
+
   const funcBlock = `
 # Slack Aggregator
-${aliasName}() {
-  local dir="${PROJECT_DIR}"
-  local lock="$dir/.next/dev/lock"
-  if [ -f "$lock" ]; then
-    local lock_pid=$(cat "$lock" 2>/dev/null)
-    [ -n "$lock_pid" ] && kill "$lock_pid" 2>/dev/null
-    rm -f "$lock"
-    sleep 1
-  fi
-  cd "$dir"
-  local port=$(node -e "const s=require('net').createServer();s.listen(0,()=>{console.log(s.address().port);s.close()})")
-  echo "Starting Slack Aggregator on port $port..."
-  npm run dev -- -p "$port" &
-  sleep 2
-  open "http://localhost:$port" 2>/dev/null || xdg-open "http://localhost:$port" 2>/dev/null
-}
+alias ${aliasName}="${launchScript}"
+alias ${aliasName}-stop="${launchScript} stop"
+alias ${aliasName}-status="${launchScript} status"
 `;
 
   const rcContent = fs.existsSync(rcFile)
@@ -84,7 +73,7 @@ ${aliasName}() {
 
   if (rcContent.includes("# Slack Aggregator")) {
     const updated = rcContent.replace(
-      /\n# Slack Aggregator\n[\s\S]*?\n}\n/,
+      /\n# Slack Aggregator\n[\s\S]*?\n/,
       funcBlock
     );
     fs.writeFileSync(rcFile, updated);
@@ -95,14 +84,15 @@ ${aliasName}() {
   }
 
   console.log(bold("\n  Done!\n"));
-  console.log(`  To start, either:\n`);
-  console.log(`    1. Open a new terminal and type ${cyan(aliasName)}`);
+  console.log(`  Commands:\n`);
+  console.log(`    ${cyan(aliasName)}          Launch the app`);
+  console.log(`    ${cyan(`${aliasName}-stop`)}     Stop the background server`);
+  console.log(`    ${cyan(`${aliasName}-status`)}   Check if it's running`);
   console.log(
-    `    2. Run ${cyan(`source ${rcFile}`)} then type ${cyan(aliasName)}`
+    `\n  ${dim(`Run ${cyan(`source ${rcFile}`)} to activate, or open a new terminal.`)}`
   );
-  console.log(`    3. Or just run ${cyan("npm run dev")} from this directory\n`);
   console.log(
-    dim("  When the app opens, click \"Add Workspace\" to connect your Slack accounts.\n")
+    dim("\n  The app opens as a standalone window — no browser tab, no terminal needed.\n")
   );
 
   rl.close();

@@ -1,0 +1,21 @@
+{
+  "name": "Slack Aggregator",
+  "short_name": "SlackAgg",
+  "description": "Unified notification feed for all your Slack workspaces",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#030712",
+  "theme_color": "#7c3aed",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

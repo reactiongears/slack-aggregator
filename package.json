@@ -6,6 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "launch": "bash scripts/launch.sh",
+    "stop": "bash scripts/launch.sh stop",
     "lint": "eslint",
     "setup": "node scripts/setup.mjs"
   },

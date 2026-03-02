@@ -39,6 +39,10 @@ data/
 # debug scripts
 debug-*.js
 
+# launcher runtime files
+.slack-aggregator.pid
+.slack-aggregator.log
+
 # vercel
 .vercel
 

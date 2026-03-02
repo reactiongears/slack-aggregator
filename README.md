@@ -22,33 +22,55 @@ Slack Aggregator runs locally on your machine and gives you:
 - **Rich mentions** — @mentions, @here, @channel, and user groups styled like Slack
 - **Privacy first** — Runs 100% locally, your tokens never leave your machine
 
-## Quick Start
+## Install
 
-### Prerequisites
+### macOS
 
-- **Node.js 18+** ([download](https://nodejs.org))
-- **Google Chrome** (for the browser-based workspace login)
+1. Clone the repo:
+   ```bash
+   git clone https://github.com/reactiongears/slack-aggregator.git
+   ```
+2. Double-click **`Install Slack Aggregator.command`** in the project folder
+3. The installer will:
+   - Check for Node.js (and offer to install it via Homebrew if missing)
+   - Install dependencies
+   - Build the production app
+   - Create **Slack Aggregator.app**
+4. Drag the app into your **Applications** folder
+5. Open it from Applications, Spotlight, or your Dock
 
-### Install & Run
+To update later, `git pull` and double-click the installer again.
+
+### Windows
+
+Requires **Node.js 18+** ([download](https://nodejs.org)) and **Google Chrome**.
 
 ```bash
 git clone https://github.com/reactiongears/slack-aggregator.git
 cd slack-aggregator
 npm install
+npm run build
+npm start
+```
+
+Then open [http://localhost:3000](http://localhost:3000) in your browser.
+
+For day-to-day use you can just run:
+```bash
+npm start
+```
+
+### Development Mode
+
+On any platform, to run with hot-reload for development:
+
+```bash
 npm run dev
 ```
 
-That's it. The app opens in your browser and walks you through adding your first workspace — just click **"Add Workspace"**, sign in to Slack in the browser window that opens, and you're done. No manual token copying needed.
+## First-Time Setup
 
-### Optional: Terminal Shortcut
-
-To launch the app from any terminal with a single command:
-
-```bash
-bash install.sh
-```
-
-This installs dependencies and creates a terminal command (e.g. `slack`) so you can start the app from anywhere.
+The app opens in your browser and walks you through adding your first workspace — click **"Add Workspace"**, sign in to Slack in the browser window that opens, and you're done. No manual token copying needed.
 
 ## Usage
 
@@ -86,7 +108,6 @@ Session tokens expire when you log out of Slack in your browser or when Slack ro
 
 Contributions are welcome! Here are some ideas:
 
-- **Desktop app wrapper** (Electron/Tauri) for a native experience
 - **System notifications** for new messages
 - **Thread support** — expand and view thread replies
 - **Message reactions** display
@@ -95,7 +116,7 @@ Contributions are welcome! Here are some ideas:
 - **Token auto-refresh** mechanism
 - **Mark entire channel as read** from the context menu
 
-Feel free to open an issue to discuss ideas or submit a pull request. All contributions, big or small, are appreciated.
+Feel free to open an issue to discuss ideas or submit a pull request.
 
 ## License
 

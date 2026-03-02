@@ -33,6 +33,12 @@ echo -e "  ${dim}Installing dependencies...${reset}"
 npm install --silent
 echo -e "  ${green}✓${reset} Dependencies installed"
 
+# Build for production
+echo ""
+echo -e "  ${dim}Building...${reset}"
+npm run build --silent 2>&1
+echo -e "  ${green}✓${reset} Production build ready"
+
 # Create terminal shortcut
 echo ""
 node scripts/setup.mjs
