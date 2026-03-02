@@ -129,6 +129,16 @@ const SKIN_TONES: Record<string, string> = {
   "skin-tone-6": "\u{1F3FF}", // dark
 };
 
+/** Curated 24 common reaction emoji: [shortcode, unicode]. 8 cols × 3 rows. */
+export const REACTION_EMOJI: [string, string][] = [
+  ["+1", "👍"], ["-1", "👎"], ["heart", "❤️"], ["joy", "😂"],
+  ["fire", "🔥"], ["eyes", "👀"], ["tada", "🎉"], ["100", "💯"],
+  ["rocket", "🚀"], ["pray", "🙏"], ["clap", "👏"], ["raised_hands", "🙌"],
+  ["thinking_face", "🤔"], ["white_check_mark", "✅"], ["wave", "👋"], ["muscle", "💪"],
+  ["sparkles", "✨"], ["star", "⭐"], ["bulb", "💡"], ["warning", "⚠️"],
+  ["thumbsup", "👍"], ["ok_hand", "👌"], ["smile", "😄"], ["sunglasses", "😎"],
+];
+
 /**
  * Convert Slack-style :emoji_name: and :emoji::skin-tone-N: to Unicode.
  */

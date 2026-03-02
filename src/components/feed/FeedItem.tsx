@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, ReactNode } from "react";
 import { UnreadMessage } from "@/lib/slack/types";
 import { RelativeTime } from "../ui/RelativeTime";
+import { REACTION_EMOJI } from "@/lib/utils/emoji";
 
 interface FeedItemProps {
   message: UnreadMessage;
@@ -69,10 +70,12 @@ function renderSlackText(text: string, myNames: string[] = []): ReactNode {
 }
 
 export function FeedItem({ message, myNames, onContextMenu }: FeedItemProps) {
-  const [mode, setMode] = useState<"idle" | "menu" | "reply">("idle");
+  const [mode, setMode] = useState<"idle" | "menu" | "reply" | "react">("idle");
   const [replyText, setReplyText] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [reacting, setReacting] = useState(false);
+  const [reacted, setReacted] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -100,6 +103,16 @@ export function FeedItem({ message, myNames, onContextMenu }: FeedItemProps) {
     if (mode === "reply") {
       inputRef.current?.focus();
     }
+  }, [mode]);
+
+  // Escape key dismisses react picker
+  useEffect(() => {
+    if (mode !== "react") return;
+    function handleEsc(e: KeyboardEvent) {
+      if (e.key === "Escape") setMode("idle");
+    }
+    document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
   }, [mode]);
 
   const handleClick = (e: React.MouseEvent) => {
@@ -144,6 +157,39 @@ export function FeedItem({ message, myNames, onContextMenu }: FeedItemProps) {
       // keep input open on error
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleReact = () => {
+    setMode("react");
+    setReacted(false);
+  };
+
+  const handleEmojiSelect = async (shortcode: string) => {
+    if (reacting) return;
+    setReacting(true);
+    try {
+      const res = await fetch("/api/add-reaction", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          workspaceId: message.workspaceId,
+          channelId: message.channelId,
+          timestamp: message.messageTs,
+          emoji: shortcode,
+        }),
+      });
+      if (res.ok) {
+        setReacted(true);
+        setTimeout(() => {
+          setMode("idle");
+          setReacted(false);
+        }, 1500);
+      }
+    } catch {
+      // keep picker open on error
+    } finally {
+      setReacting(false);
     }
   };
 
@@ -257,6 +303,18 @@ export function FeedItem({ message, myNames, onContextMenu }: FeedItemProps) {
             Quick Reply
           </button>
           <button
+            onClick={handleReact}
+            className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-gray-100 transition-colors flex items-center gap-2.5"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+              <line x1="9" y1="9" x2="9.01" y2="9" />
+              <line x1="15" y1="9" x2="15.01" y2="9" />
+            </svg>
+            React
+          </button>
+          <button
             onClick={handleGoTo}
             className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-gray-100 transition-colors flex items-center gap-2.5"
           >
@@ -305,6 +363,45 @@ export function FeedItem({ message, myNames, onContextMenu }: FeedItemProps) {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M18 6L6 18M6 6l12 12" />
                 </svg>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Inline emoji picker */}
+      {mode === "react" && (
+        <div className="px-4 pb-3 pl-[72px]">
+          {reacted ? (
+            <div className="flex items-center gap-2 py-2 text-sm text-green-400">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Reaction added
+            </div>
+          ) : (
+            <div>
+              <div className="text-xs text-gray-500 mb-2">
+                {reacting ? "Adding reaction..." : "Pick a reaction"}
+              </div>
+              <div className="grid grid-cols-8 gap-1 mb-2">
+                {REACTION_EMOJI.map(([shortcode, unicode]) => (
+                  <button
+                    key={shortcode}
+                    onClick={() => handleEmojiSelect(shortcode)}
+                    disabled={reacting}
+                    className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-700 transition-colors text-lg disabled:opacity-40"
+                    title={`:${shortcode}:`}
+                  >
+                    {unicode}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setMode("idle")}
+                className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+              >
+                Cancel
               </button>
             </div>
           )}
