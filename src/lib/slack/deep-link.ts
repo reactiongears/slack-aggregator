@@ -10,10 +10,9 @@ export interface DeepLinkParams {
 export function buildDeepLink(params: DeepLinkParams): string {
   const { teamId, teamDomain, channelId, messageTs, userId, isDm } = params;
 
-  // For specific messages, use permalink format (Slack desktop intercepts these)
+  // For specific messages, use slack:// protocol to open in Slack app
   if (messageTs) {
-    const permalinkTs = "p" + messageTs.replace(".", "");
-    return `https://${teamDomain}.slack.com/archives/${channelId}/${permalinkTs}`;
+    return `slack://channel?team=${teamId}&id=${channelId}&message=${messageTs}`;
   }
 
   // For DMs, link to the user

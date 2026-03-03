@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect, ReactNode } from "react";
 import { UnreadMessage } from "@/lib/slack/types";
 import { RelativeTime } from "../ui/RelativeTime";
-import { REACTION_EMOJI } from "@/lib/utils/emoji";
+import Picker from "@emoji-mart/react";
+import data from "@emoji-mart/data";
 
 interface FeedItemProps {
   message: UnreadMessage;
@@ -384,22 +385,22 @@ export function FeedItem({ message, myNames, onContextMenu }: FeedItemProps) {
               <div className="text-xs text-gray-500 mb-2">
                 {reacting ? "Adding reaction..." : "Pick a reaction"}
               </div>
-              <div className="grid grid-cols-8 gap-1 mb-2">
-                {REACTION_EMOJI.map(([shortcode, unicode]) => (
-                  <button
-                    key={shortcode}
-                    onClick={() => handleEmojiSelect(shortcode)}
-                    disabled={reacting}
-                    className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-700 transition-colors text-lg disabled:opacity-40"
-                    title={`:${shortcode}:`}
-                  >
-                    {unicode}
-                  </button>
-                ))}
-              </div>
+              <Picker
+                data={data}
+                onEmojiSelect={(emoji: { id: string }) => handleEmojiSelect(emoji.id)}
+                theme="dark"
+                perLine={8}
+                emojiSize={20}
+                emojiButtonSize={28}
+                previewPosition="none"
+                navPosition="bottom"
+                searchPosition="sticky"
+                maxFrequentRows={2}
+                skinTonePosition="search"
+              />
               <button
                 onClick={() => setMode("idle")}
-                className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                className="text-xs text-gray-500 hover:text-gray-300 transition-colors mt-2"
               >
                 Cancel
               </button>

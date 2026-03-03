@@ -12,9 +12,12 @@
     "setup": "node scripts/setup.mjs"
   },
   "dependencies": {
+    "@emoji-mart/data": "^1.2.1",
+    "@emoji-mart/react": "^1.1.1",
     "@slack/web-api": "^7.14.1",
     "@tanstack/react-virtual": "^3.13.19",
     "better-sqlite3": "^12.6.2",
+    "emoji-mart": "^5.6.0",
     "next": "16.1.6",
     "puppeteer-core": "^24.37.5",
     "react": "19.2.3",

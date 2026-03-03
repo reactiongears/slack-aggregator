@@ -255,16 +255,23 @@ export function FeedContainer() {
           {isLoading && !feed ? (
             <FeedSkeleton />
           ) : isError ? (
-            <div className="flex flex-col items-center justify-center py-20 text-red-400">
-              <p className="text-lg font-medium">Failed to load notifications</p>
+            <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+              <div className="w-12 h-12 rounded-xl bg-gray-800 flex items-center justify-center mb-4">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-500">
+                  <path d="M12 9v4M12 17h.01" />
+                  <circle cx="12" cy="12" r="10" />
+                </svg>
+              </div>
+              <p className="text-lg font-medium text-gray-300">Connecting to server...</p>
               <p className="text-sm text-gray-500 mt-1">
-                Check your Slack tokens in .env.local
+                Retrying automatically every few seconds
               </p>
+              <div className="w-5 h-5 border-2 border-gray-700 border-t-gray-400 rounded-full animate-spin mt-4" />
               <button
                 onClick={refresh}
                 className="mt-4 px-4 py-2 bg-gray-800 rounded-lg text-sm hover:bg-gray-700 transition-colors"
               >
-                Try again
+                Retry now
               </button>
             </div>
           ) : feed && feed.workspaces.length > 0 && feed.workspaces.every((w) => w.error?.includes("invalid_auth")) ? (

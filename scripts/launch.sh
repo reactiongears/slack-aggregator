@@ -49,6 +49,13 @@ is_running() {
 
 # Handle "stop" argument
 if [ "${1:-}" = "stop" ]; then
+  # Kill the watcher if running
+  WATCHER_PIDFILE="$DIR/.slack-aggregator-watcher.pid"
+  if [ -f "$WATCHER_PIDFILE" ]; then
+    wpid=$(cat "$WATCHER_PIDFILE" 2>/dev/null)
+    [ -n "$wpid" ] && kill "$wpid" 2>/dev/null
+    rm -f "$WATCHER_PIDFILE"
+  fi
   if [ -f "$PIDFILE" ]; then
     pid=$(cat "$PIDFILE" 2>/dev/null)
     if [ -n "$pid" ] && kill "$pid" 2>/dev/null; then
@@ -74,7 +81,11 @@ fi
 # If already running, just open the window
 if is_running; then
   echo -e "  ${green}●${reset} Already running on port $PORT"
-  open "http://localhost:$PORT" 2>/dev/null
+  if [ -d "/Applications/Google Chrome.app" ]; then
+    osascript -e "do shell script \"/Applications/Google\\\\ Chrome.app/Contents/MacOS/Google\\\\ Chrome --app=http://localhost:$PORT --window-size=1200,800 &> /dev/null &\""
+  else
+    open "http://localhost:$PORT" 2>/dev/null
+  fi
   exit 0
 fi
 
@@ -109,8 +120,35 @@ echo -e "  ${green}✓${reset} Running on http://localhost:$PORT (pid $SERVER_PI
 
 # Open in Chrome as a standalone app window (no URL bar)
 # Use osascript to launch Chrome with --app flag reliably (even when Chrome is already running)
+APP_URL="http://localhost:$PORT"
 if [ -d "/Applications/Google Chrome.app" ]; then
-  osascript -e "do shell script \"/Applications/Google\\\\ Chrome.app/Contents/MacOS/Google\\\\ Chrome --app=http://localhost:$PORT --window-size=1200,800 &> /dev/null &\""
+  osascript -e "do shell script \"/Applications/Google\\\\ Chrome.app/Contents/MacOS/Google\\\\ Chrome --app=$APP_URL --window-size=1200,800 &> /dev/null &\""
 else
-  open "http://localhost:$PORT" 2>/dev/null
+  open "$APP_URL" 2>/dev/null
 fi
+
+# Background watcher: kills the server when the Chrome app window closes.
+# Chrome --app windows don't appear in AppleScript tab enumeration,
+# so we check for the Chrome process with our --app URL instead.
+# Detached from the terminal so it survives the launcher exiting.
+(
+  sleep 5  # give Chrome time to open the window
+  while true; do
+    # Check if any Chrome process is running with our app URL
+    # (pgrep truncates args on macOS, so use ps + grep instead)
+    if ! ps -eo command | grep -q "[a]pp=http://localhost:$PORT"; then
+      # Window is gone — stop the server
+      if [ -f "$PIDFILE" ]; then
+        pid=$(cat "$PIDFILE" 2>/dev/null)
+        if [ -n "$pid" ] && kill "$pid" 2>/dev/null; then
+          rm -f "$PIDFILE"
+        fi
+      fi
+      exit 0
+    fi
+    sleep 3
+  done
+) &>/dev/null &
+WATCHER_PID=$!
+# Save watcher PID so "stop" can clean it up too
+echo "$WATCHER_PID" > "$DIR/.slack-aggregator-watcher.pid"

@@ -14,6 +14,8 @@ export function useFeed(workspace?: string) {
       refreshInterval: 30000,
       revalidateOnFocus: true,
       dedupingInterval: 5000,
+      errorRetryInterval: 3000,
+      errorRetryCount: Infinity,
     }
   );
 

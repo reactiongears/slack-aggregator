@@ -26,3 +26,14 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #4b5563;
 }
+
+/* emoji-mart dark theme overrides */
+em-emoji-picker {
+  --rgb-background: 17, 24, 39;
+  --rgb-input: 31, 41, 55;
+  --rgb-color: 209, 213, 219;
+  --rgb-accent: 79, 70, 229;
+  --color-border: rgba(55, 65, 81, 0.5);
+  --color-border-over: rgba(75, 85, 99, 0.7);
+  --shadow: none;
+}
