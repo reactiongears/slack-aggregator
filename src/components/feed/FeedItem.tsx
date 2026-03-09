@@ -77,7 +77,9 @@ export function FeedItem({ message, myNames, onContextMenu }: FeedItemProps) {
   const [sent, setSent] = useState(false);
   const [reacting, setReacting] = useState(false);
   const [reacted, setReacted] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const menuRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const channelLabel =
@@ -118,6 +120,10 @@ export function FeedItem({ message, myNames, onContextMenu }: FeedItemProps) {
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (rect) {
+      setMenuPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    }
     setMode("menu");
   };
 
@@ -206,6 +212,7 @@ export function FeedItem({ message, myNames, onContextMenu }: FeedItemProps) {
 
   return (
     <div
+      ref={containerRef}
       className="relative border-b border-gray-800/50"
       onContextMenu={(e) => {
         if (onContextMenu) {
@@ -292,7 +299,8 @@ export function FeedItem({ message, myNames, onContextMenu }: FeedItemProps) {
       {mode === "menu" && (
         <div
           ref={menuRef}
-          className="absolute right-4 top-2 z-20 bg-gray-800 border border-gray-700 rounded-lg shadow-xl py-1 min-w-[170px]"
+          style={{ left: menuPos.x, top: menuPos.y }}
+          className="absolute z-20 bg-gray-800 border border-gray-700 rounded-lg shadow-xl py-1 min-w-[170px]"
         >
           <button
             onClick={handleQuickReply}
