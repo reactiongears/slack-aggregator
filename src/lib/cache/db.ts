@@ -45,6 +45,32 @@ export function getDb(): Database.Database {
       updated_at INTEGER
     );
 
+    CREATE TABLE IF NOT EXISTS auto_replies (
+      id TEXT PRIMARY KEY,
+      scope TEXT NOT NULL CHECK(scope IN ('global', 'workspace', 'channel', 'user')),
+      workspace_id TEXT,
+      channel_id TEXT,
+      channel_name TEXT,
+      user_id TEXT,
+      user_name TEXT,
+      reply_text TEXT NOT NULL,
+      start_time INTEGER NOT NULL,
+      end_time INTEGER NOT NULL,
+      enabled INTEGER NOT NULL DEFAULT 1,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS auto_reply_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      rule_id TEXT NOT NULL,
+      workspace_id TEXT NOT NULL,
+      channel_id TEXT NOT NULL,
+      message_ts TEXT NOT NULL,
+      replied_at INTEGER NOT NULL,
+      UNIQUE(rule_id, workspace_id, channel_id, message_ts)
+    );
+
     CREATE TABLE IF NOT EXISTS scheduled_messages (
       id TEXT PRIMARY KEY,
       workspace_id TEXT NOT NULL,

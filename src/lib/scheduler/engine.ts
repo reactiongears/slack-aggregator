@@ -1,6 +1,7 @@
 import { ScheduleType } from "./types";
 import { getDueMessages, markSent } from "./queries";
 import { getClient } from "@/lib/slack/client";
+import { processAutoReplies } from "@/lib/auto-reply/engine";
 
 export function computeNextRun(
   scheduleType: ScheduleType,
@@ -105,9 +106,11 @@ export function startScheduler(): void {
   console.log("[scheduler] Starting scheduler (30s tick)");
   // Run immediately on start
   processScheduledMessages().catch(console.error);
+  processAutoReplies().catch(console.error);
   // Then every 30 seconds
   intervalId = setInterval(() => {
     processScheduledMessages().catch(console.error);
+    processAutoReplies().catch(console.error);
   }, 30_000);
 }
 

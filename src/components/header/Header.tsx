@@ -62,6 +62,18 @@ export function Header({
         Schedule
       </a>
 
+      {/* Auto-reply link */}
+      <a
+        href="/auto-replies"
+        className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm text-gray-300 transition-colors"
+        title="Auto-replies"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+        Auto-Reply
+      </a>
+
       {/* Refresh button */}
       <button
         onClick={onRefresh}

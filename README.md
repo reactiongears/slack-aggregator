@@ -21,6 +21,7 @@ Slack Aggregator runs locally on your machine and gives you:
 - **Quick reply** — Reply to messages without leaving the app
 - **Emoji reactions** — React to any message with one click
 - **Scheduled messages** — Schedule one-time, daily, or day-of-week messages to any channel
+- **Auto-replies** — Set up automatic replies scoped to global, workspace, channel, or person with start/end times
 - **Smart filtering** — Filter by workspace, mentions, DMs, or channels
 - **Search** — Find messages across all workspaces instantly
 - **Bulk actions** — Select multiple messages and mark them all as read at once
