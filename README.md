@@ -20,8 +20,10 @@ Slack Aggregator runs locally on your machine and gives you:
 - **One-click deep linking** — Click any message to open it directly in Slack desktop
 - **Quick reply** — Reply to messages without leaving the app
 - **Emoji reactions** — React to any message with one click
+- **Scheduled messages** — Schedule one-time, daily, or day-of-week messages to any channel
 - **Smart filtering** — Filter by workspace, mentions, DMs, or channels
 - **Search** — Find messages across all workspaces instantly
+- **Bulk actions** — Select multiple messages and mark them all as read at once
 - **Right-click actions** — Mark as read, ignore noisy users or channels
 - **Browser notifications** — Tab badge shows your total unread count
 - **Rich mentions** — @mentions, @here, @channel, and user groups styled like Slack
@@ -85,6 +87,8 @@ The app opens in your browser and walks you through adding your first workspace 
 
 - **Click** any message to quick reply, react with an emoji, or open it in Slack desktop
 - **Right-click** a message to mark as read, ignore a user, or ignore a channel
+- **Select** multiple messages and bulk mark as read
+- **Schedule** messages from the clock icon in the header — one-time, daily, or specific days of the week with optional end dates
 - **Filter** by workspace, type (mentions/DMs/channels), or search
 - **Manage ignored** users and channels from the "Ignored" button in the sidebar
 - **Add more workspaces** anytime with the "+ Add Workspace" button

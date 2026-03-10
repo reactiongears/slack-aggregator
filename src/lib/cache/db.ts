@@ -44,6 +44,24 @@ export function getDb(): Database.Database {
       my_user_id TEXT,
       updated_at INTEGER
     );
+
+    CREATE TABLE IF NOT EXISTS scheduled_messages (
+      id TEXT PRIMARY KEY,
+      workspace_id TEXT NOT NULL,
+      channel_id TEXT NOT NULL,
+      channel_name TEXT,
+      text TEXT NOT NULL,
+      schedule_type TEXT NOT NULL CHECK(schedule_type IN ('once', 'daily', 'days_of_week')),
+      time TEXT NOT NULL,
+      days_of_week TEXT,
+      next_run INTEGER NOT NULL,
+      end_time INTEGER,
+      enabled INTEGER NOT NULL DEFAULT 1,
+      last_sent INTEGER,
+      last_error TEXT,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
   `);
 
   return db;

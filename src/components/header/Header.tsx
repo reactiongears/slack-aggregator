@@ -49,6 +49,19 @@ export function Header({
         </div>
       </div>
 
+      {/* Schedule link */}
+      <a
+        href="/schedule"
+        className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm text-gray-300 transition-colors"
+        title="Scheduled messages"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+        Schedule
+      </a>
+
       {/* Refresh button */}
       <button
         onClick={onRefresh}
