@@ -10,6 +10,7 @@ interface IncomingMessage {
   userId: string; // sender
   messageTs: string;
   text: string;
+  isDm: boolean;
 }
 
 function mentionsMe(text: string, myUserId: string): boolean {
@@ -35,6 +36,12 @@ function ruleMatches(rule: AutoReply, msg: IncomingMessage, myUserIds: Map<strin
       if (rule.workspaceId !== msg.workspaceId || rule.channelId !== msg.channelId) return false;
       // Only reply to @mentions
       return myId ? mentionsMe(msg.text, myId) : false;
+
+    case "dm":
+      // Reply to all DMs (optionally scoped to a workspace)
+      if (!msg.isDm) return false;
+      if (rule.workspaceId && rule.workspaceId !== msg.workspaceId) return false;
+      return true;
 
     case "user":
       // User-scoped: reply to all messages from this person
@@ -88,7 +95,7 @@ export async function processAutoReplies(): Promise<void> {
   // Determine which workspaces we need to check based on active rules
   const workspacesToCheck = new Set<string>();
   for (const rule of rules) {
-    if (rule.scope === "global") {
+    if (rule.scope === "global" || (rule.scope === "dm" && !rule.workspaceId)) {
       configs.forEach((c) => workspacesToCheck.add(c.id));
     } else if (rule.workspaceId) {
       workspacesToCheck.add(rule.workspaceId);
@@ -112,6 +119,7 @@ export async function processAutoReplies(): Promise<void> {
 
       for (const ch of channels) {
         const channelId = ch.id as string;
+        const isDm = !!(ch.is_im || ch.is_mpim);
 
         // Get recent messages in this channel
         const lastTs = getLastProcessedTs(wsId, channelId);
@@ -135,6 +143,7 @@ export async function processAutoReplies(): Promise<void> {
             userId: senderId,
             messageTs,
             text,
+            isDm,
           };
 
           // Check each rule

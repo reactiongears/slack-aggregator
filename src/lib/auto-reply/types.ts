@@ -1,4 +1,4 @@
-export type AutoReplyScope = "global" | "workspace" | "channel" | "user";
+export type AutoReplyScope = "global" | "workspace" | "channel" | "dm" | "user";
 
 export interface AutoReply {
   id: string;

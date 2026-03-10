@@ -23,6 +23,8 @@ function scopeLabel(rule: AutoReply): string {
       return rule.workspaceId ?? "Workspace";
     case "channel":
       return rule.channelName ? `#${rule.channelName}` : rule.channelId ?? "Channel";
+    case "dm":
+      return rule.workspaceId ? `DMs in ${rule.workspaceId}` : "All DMs";
     case "user":
       return rule.userName || rule.userId || "User";
   }

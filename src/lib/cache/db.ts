@@ -47,7 +47,7 @@ export function getDb(): Database.Database {
 
     CREATE TABLE IF NOT EXISTS auto_replies (
       id TEXT PRIMARY KEY,
-      scope TEXT NOT NULL CHECK(scope IN ('global', 'workspace', 'channel', 'user')),
+      scope TEXT NOT NULL CHECK(scope IN ('global', 'workspace', 'channel', 'dm', 'user')),
       workspace_id TEXT,
       channel_id TEXT,
       channel_name TEXT,

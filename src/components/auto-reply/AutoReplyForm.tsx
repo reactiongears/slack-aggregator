@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import useSWR from "swr";
 import { useChannels } from "@/hooks/useChannels";
 import { AutoReplyScope, CreateAutoReplyRequest } from "@/lib/auto-reply/types";
 
@@ -10,22 +11,127 @@ interface Workspace {
   color: string;
 }
 
+interface SlackUser {
+  id: string;
+  displayName: string;
+  realName: string;
+  avatar: string;
+}
+
 interface AutoReplyFormProps {
   workspaces: Workspace[];
   onSubmit: (req: CreateAutoReplyRequest) => Promise<void>;
   onCancel: () => void;
 }
 
-const SCOPE_LABELS: Record<AutoReplyScope, string> = {
-  global: "Global (all workspaces)",
-  workspace: "Workspace",
-  channel: "Channel",
-  user: "Person",
-};
+const SCOPE_OPTIONS: { value: AutoReplyScope; label: string }[] = [
+  { value: "global", label: "Global" },
+  { value: "workspace", label: "Workspace" },
+  { value: "channel", label: "Channel" },
+  { value: "dm", label: "All DMs" },
+  { value: "user", label: "Person" },
+];
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 function toLocalDatetimeString(date: Date): string {
   const pad = (n: number) => n.toString().padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function UserTypeahead({
+  workspaceId,
+  selectedId,
+  selectedName,
+  onSelect,
+}: {
+  workspaceId: string;
+  selectedId: string;
+  selectedName: string;
+  onSelect: (id: string, name: string) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const { data } = useSWR<{ users: SlackUser[] }>(
+    workspaceId ? `/api/users?workspaceId=${workspaceId}` : null,
+    fetcher
+  );
+
+  const users = data?.users ?? [];
+  const filtered = query
+    ? users.filter(
+        (u) =>
+          u.displayName.toLowerCase().includes(query.toLowerCase()) ||
+          u.realName.toLowerCase().includes(query.toLowerCase())
+      )
+    : users;
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  if (selectedId) {
+    return (
+      <div className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2">
+        <span className="text-sm text-gray-200">{selectedName || selectedId}</span>
+        <button
+          type="button"
+          onClick={() => onSelect("", "")}
+          className="text-gray-500 hover:text-gray-300 text-xs ml-auto"
+        >
+          Change
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div ref={ref} className="relative">
+      <input
+        type="text"
+        value={query}
+        onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        placeholder="Search for a person..."
+        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-gray-600"
+      />
+      {open && filtered.length > 0 && (
+        <div className="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto bg-gray-800 border border-gray-700 rounded-lg shadow-lg">
+          {filtered.slice(0, 20).map((u) => (
+            <button
+              key={u.id}
+              type="button"
+              onClick={() => {
+                onSelect(u.id, u.displayName);
+                setQuery("");
+                setOpen(false);
+              }}
+              className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-700 text-left transition-colors"
+            >
+              {u.avatar && (
+                <img src={u.avatar} alt="" className="w-5 h-5 rounded-full" />
+              )}
+              <span className="text-sm text-gray-200 truncate">{u.displayName}</span>
+              {u.realName && u.realName !== u.displayName && (
+                <span className="text-xs text-gray-500 truncate">{u.realName}</span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+      {open && query && filtered.length === 0 && (
+        <div className="absolute z-10 mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-xs text-gray-500">
+          No users found
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function AutoReplyForm({ workspaces, onSubmit, onCancel }: AutoReplyFormProps) {
@@ -45,7 +151,7 @@ export function AutoReplyForm({ workspaces, onSubmit, onCancel }: AutoReplyFormP
 
   const needsWorkspace = scope !== "global";
   const { channels, isLoading: channelsLoading } = useChannels(
-    needsWorkspace ? workspaceId : null
+    scope === "channel" ? workspaceId : null
   );
 
   const selectedChannel = channels.find((ch) => ch.id === channelId);
@@ -80,30 +186,39 @@ export function AutoReplyForm({ workspaces, onSubmit, onCancel }: AutoReplyFormP
       <div>
         <label className="block text-xs text-gray-400 mb-1">Scope</label>
         <div className="flex flex-wrap gap-2">
-          {(Object.keys(SCOPE_LABELS) as AutoReplyScope[]).map((s) => (
+          {SCOPE_OPTIONS.map(({ value, label }) => (
             <button
-              key={s}
+              key={value}
               type="button"
-              onClick={() => { setScope(s); setChannelId(""); setUserId(""); setUserName(""); }}
+              onClick={() => { setScope(value); setChannelId(""); setUserId(""); setUserName(""); }}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                scope === s
+                scope === value
                   ? "bg-indigo-600 text-white"
                   : "bg-gray-800 text-gray-400 hover:bg-gray-700"
               }`}
             >
-              {SCOPE_LABELS[s]}
+              {label}
             </button>
           ))}
         </div>
+        <p className="text-xs text-gray-600 mt-1.5">
+          {scope === "global" && "Replies to @mentions in all workspaces"}
+          {scope === "workspace" && "Replies to @mentions in the selected workspace"}
+          {scope === "channel" && "Replies to @mentions in a specific channel"}
+          {scope === "dm" && "Replies to all direct messages"}
+          {scope === "user" && "Replies to all messages from a specific person"}
+        </p>
       </div>
 
-      {/* Workspace (for workspace, channel, user scopes) */}
+      {/* Workspace (for workspace, channel, dm, user scopes) */}
       {needsWorkspace && (
         <div>
-          <label className="block text-xs text-gray-400 mb-1">Workspace</label>
+          <label className="block text-xs text-gray-400 mb-1">
+            Workspace{scope === "dm" ? " (optional — leave for all)" : ""}
+          </label>
           <select
             value={workspaceId}
-            onChange={(e) => { setWorkspaceId(e.target.value); setChannelId(""); }}
+            onChange={(e) => { setWorkspaceId(e.target.value); setChannelId(""); setUserId(""); setUserName(""); }}
             className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-gray-600"
           >
             {workspaces.map((ws) => (
@@ -133,29 +248,16 @@ export function AutoReplyForm({ workspaces, onSubmit, onCancel }: AutoReplyFormP
         </div>
       )}
 
-      {/* User (for user scope) */}
+      {/* User typeahead (for user scope) */}
       {scope === "user" && (
-        <div className="space-y-2">
-          <div>
-            <label className="block text-xs text-gray-400 mb-1">Slack User ID</label>
-            <input
-              type="text"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              placeholder="e.g. U01ABCD2345"
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-gray-600"
-            />
-          </div>
-          <div>
-            <label className="block text-xs text-gray-400 mb-1">Display Name (for your reference)</label>
-            <input
-              type="text"
-              value={userName}
-              onChange={(e) => setUserName(e.target.value)}
-              placeholder="e.g. John Smith"
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-gray-600"
-            />
-          </div>
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">Person</label>
+          <UserTypeahead
+            workspaceId={workspaceId}
+            selectedId={userId}
+            selectedName={userName}
+            onSelect={(id, name) => { setUserId(id); setUserName(name); }}
+          />
         </div>
       )}
 

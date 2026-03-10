@@ -94,6 +94,73 @@ The app opens in your browser and walks you through adding your first workspace 
 - **Manage ignored** users and channels from the "Ignored" button in the sidebar
 - **Add more workspaces** anytime with the "+ Add Workspace" button
 
+## Scheduled Messages
+
+Send messages to any Slack channel on a schedule. Click the **clock icon** ("Schedule") in the header to open the scheduling page.
+
+### Creating a Schedule
+
+1. Click **"New Schedule"**
+2. Select a **workspace** and **channel** (channels you're a member of are listed, including DMs and private channels)
+3. Type your **message**
+4. Choose a **frequency**:
+   - **One Time** — sends once at the specified time, then auto-disables
+   - **Daily** — sends every day at the specified time
+   - **Certain Days** — pick specific days of the week (e.g. Mon/Wed/Fri)
+5. Set the **time** to send
+6. Optionally set an **end date** for recurring schedules (daily and certain days only)
+7. Click **"Schedule Message"**
+
+### Managing Schedules
+
+- **Toggle on/off** — use the switch to pause or resume a schedule without deleting it
+- **Delete** — permanently remove a schedule with the trash icon
+- **Status indicators** — each schedule shows its next run time and when it last sent
+- Completed one-time schedules show a "Sent" badge
+
+The scheduler runs every 30 seconds in the background. Messages are stored in the local SQLite database and persist across app restarts.
+
+## Auto-Replies
+
+Set up automatic replies that respond on your behalf when you're away. Click **"Auto-Reply"** in the header to manage rules.
+
+### Scopes
+
+Each auto-reply rule has a scope that controls when it triggers:
+
+| Scope | Triggers on | Use case |
+|-------|------------|----------|
+| **Global** | @mentions in any workspace | Vacation / out of office across all workspaces |
+| **Workspace** | @mentions in a specific workspace | Away from one team but active in others |
+| **Channel** | @mentions in a specific channel | Stepped away from a project channel |
+| **All DMs** | Any direct message | Auto-respond to all DMs while away |
+| **Person** | Any message from a specific person | Let someone know you'll get back to them |
+
+> **Note:** Global, Workspace, and Channel scopes only trigger on **@mentions** — they won't reply to every message in a channel. The DM and Person scopes reply to all messages.
+
+### Creating a Rule
+
+1. Click **"New Rule"**
+2. Select a **scope** — a description below the buttons explains what each scope does
+3. For workspace/channel/DM/person scopes, select the **workspace**
+4. For channel scope, select the **channel**
+5. For person scope, **search by name** — type to filter workspace members and select from the dropdown
+6. Type your **auto-reply message** (this is sent as a threaded reply)
+7. Set the **start** and **end** date/time — the rule only activates during this window
+8. Click **"Create Rule"**
+
+### Managing Rules
+
+- **Toggle on/off** — pause a rule without deleting it
+- **Delete** — permanently remove a rule
+- **Status indicators**:
+  - **Active** — currently responding to matching messages
+  - **Scheduled** — start time is in the future
+  - **Expired** — end time has passed
+  - **Paused** — manually disabled
+
+The auto-reply engine runs every 30 seconds. Each message only receives one auto-reply per rule (no duplicate replies). Replies are always sent as **threaded messages** so they don't clutter the main channel.
+
 ## How It Works
 
 - Runs as a local Next.js app on your machine
