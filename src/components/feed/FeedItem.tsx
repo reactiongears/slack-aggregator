@@ -10,6 +10,9 @@ interface FeedItemProps {
   message: UnreadMessage;
   myNames?: string[];
   onContextMenu?: (e: React.MouseEvent, message: UnreadMessage) => void;
+  selectionMode?: boolean;
+  selected?: boolean;
+  onToggleSelect?: (id: string) => void;
 }
 
 function formatSlackText(text: string): string {
@@ -70,7 +73,7 @@ function renderSlackText(text: string, myNames: string[] = []): ReactNode {
   });
 }
 
-export function FeedItem({ message, myNames, onContextMenu }: FeedItemProps) {
+export function FeedItem({ message, myNames, onContextMenu, selectionMode, selected, onToggleSelect }: FeedItemProps) {
   const [mode, setMode] = useState<"idle" | "menu" | "reply" | "react">("idle");
   const [replyText, setReplyText] = useState("");
   const [sending, setSending] = useState(false);
@@ -223,9 +226,22 @@ export function FeedItem({ message, myNames, onContextMenu }: FeedItemProps) {
     >
       {/* Main row */}
       <div
-        onClick={handleClick}
-        className="flex gap-3 px-4 py-3 hover:bg-gray-800/50 transition-colors group cursor-pointer"
+        onClick={selectionMode ? () => onToggleSelect?.(message.id) : handleClick}
+        className={`flex gap-3 px-4 py-3 hover:bg-gray-800/50 transition-colors group cursor-pointer ${selected ? "bg-indigo-500/10" : ""}`}
       >
+        {/* Selection checkbox */}
+        {selectionMode && (
+          <div className="shrink-0 self-center">
+            <div className={`w-4 h-4 rounded border ${selected ? "bg-indigo-600 border-indigo-600" : "border-gray-600"} flex items-center justify-center`}>
+              {selected && (
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Workspace color indicator */}
         <div
           className="w-1 shrink-0 rounded-full self-stretch"
