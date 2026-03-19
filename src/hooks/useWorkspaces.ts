@@ -7,6 +7,7 @@ interface WorkspaceStatus {
   teamId: string;
   name: string;
   color: string;
+  icon?: string;
   connected: boolean;
   user?: string;
   error?: string;

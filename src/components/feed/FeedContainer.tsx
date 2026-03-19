@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useFeed } from "@/hooks/useFeed";
+import { useWorkspaces } from "@/hooks/useWorkspaces";
 import { useFavicon } from "@/hooks/useFavicon";
 import { FeedItem } from "./FeedItem";
 import { FeedSkeleton } from "./FeedSkeleton";
@@ -101,6 +102,17 @@ export function FeedContainer() {
   }, [contextMenu, fetchIgnores]);
 
   const { feed, isLoading, isError, refresh, removeMessage } = useFeed(selectedWorkspace);
+  const { workspaces: wsStatus } = useWorkspaces();
+
+  // Merge workspace icons from /api/workspaces into feed workspaces
+  const workspacesWithIcons = useMemo(() => {
+    if (!feed?.workspaces) return [];
+    const iconMap = new Map(wsStatus.map((ws) => [ws.id, ws.icon]));
+    return feed.workspaces.map((ws) => ({
+      ...ws,
+      icon: ws.icon || iconMap.get(ws.id) || "",
+    }));
+  }, [feed?.workspaces, wsStatus]);
 
   const handleMarkRead = useCallback(async () => {
     if (!contextMenu) return;
@@ -245,7 +257,7 @@ export function FeedContainer() {
           </h2>
         </div>
         <WorkspaceList
-          workspaces={feed?.workspaces ?? []}
+          workspaces={workspacesWithIcons}
           selectedWorkspace={selectedWorkspace}
           onSelect={setSelectedWorkspace}
           onAddWorkspace={() => setShowAddWorkspace(true)}

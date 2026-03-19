@@ -55,7 +55,7 @@ export function WorkspaceBadge({
           : "text-gray-400 hover:bg-gray-800/50 hover:text-gray-200"
       }`}
     >
-      <WorkspaceIcon name={workspace.name} color={workspace.color} size={6} />
+      <WorkspaceIcon name={workspace.name} color={workspace.color} icon={workspace.icon} size={6} />
       <span className="text-sm font-medium truncate flex-1 text-left">
         {workspace.name}
       </span>

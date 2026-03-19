@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchAllUnreads } from "@/lib/slack/fetcher";
-import { getFeedCache, setFeedCache } from "@/lib/cache/feed-cache";
+import { getFeedCache, getStaleFeedCache, setFeedCache, getOrStartFetch } from "@/lib/cache/feed-cache";
 
 export const dynamic = "force-dynamic";
 
@@ -15,16 +15,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(cached);
     }
 
-    const feed = await fetchAllUnreads(workspace);
-    setFeedCache(feed, workspace);
+    // Cache expired — fetch fresh data with request coalescing
+    // If another request is already fetching, we wait for it instead of
+    // returning stale data or starting a duplicate fetch.
+    const feed = await getOrStartFetch(workspace, async () => {
+      const result = await fetchAllUnreads(workspace);
+      setFeedCache(result, workspace);
+      return result;
+    });
 
     return NextResponse.json(feed);
   } catch (error) {
     // On error, serve stale cache if available rather than showing an error
     const workspace = request.nextUrl.searchParams.get("workspace") ?? undefined;
-    const cached = getFeedCache(workspace);
-    if (cached) {
-      return NextResponse.json(cached);
+    const stale = getStaleFeedCache(workspace);
+    if (stale) {
+      return NextResponse.json(stale);
     }
 
     console.error("Feed fetch error:", error);

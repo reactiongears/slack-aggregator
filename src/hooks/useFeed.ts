@@ -11,10 +11,11 @@ export function useFeed(workspace?: string) {
     `/api/feed${params}`,
     fetcher,
     {
-      refreshInterval: 30000,
+      refreshInterval: 20000,
       revalidateOnFocus: true,
-      dedupingInterval: 5000,
-      errorRetryInterval: 3000,
+      revalidateOnReconnect: true,
+      dedupingInterval: 10000,
+      errorRetryInterval: 5000,
       errorRetryCount: Infinity,
     }
   );
