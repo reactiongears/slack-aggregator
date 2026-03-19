@@ -45,11 +45,15 @@ export async function launchSlackAuth(): Promise<AuthResult> {
     headless: false,
     executablePath: chromePath,
     defaultViewport: { width: 460, height: 700 },
+    ignoreDefaultArgs: ["--enable-automation"],
     args: [
       "--window-size=460,700",
       "--window-position=100,100",
-      "--disable-extensions",
       "--no-first-run",
+      "--no-default-browser-check",
+      "--disable-blink-features=AutomationControlled",
+      "--disable-infobars",
+      "--exclude-switches=enable-automation",
     ],
   });
 

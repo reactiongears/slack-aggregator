@@ -33,6 +33,7 @@ export interface WorkspaceSummary {
   teamId: string;
   name: string;
   color: string;
+  icon?: string;
   unreadCount: number;
   channelsWithUnreads: number;
   lastUpdated: number;
